@@ -1,0 +1,5 @@
+{
+  "name": "SendOver P2P",
+  "description": "Secure, peer-to-peer file transfer directly between browsers using WebRTC. No intermediate servers for file data.",
+  "requestFramePermissions": []
+}

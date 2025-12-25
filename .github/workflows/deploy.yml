@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          # cache: 'npm' removed because no lock file exists to generate the cache key
+
+      - name: Install dependencies
+        # 'npm install' works without a lockfile (creates a fresh one)
+        run: npm install
+
+      - name: Build
+        # Pass base path to ensure assets load correctly on subpaths (like /repo-name/)
+        run: npm run build -- --base=./
+
+      # Essential: Create .nojekyll to prevent GitHub Pages from ignoring files starting with _
+      - name: Create .nojekyll
+        run: touch ./dist/.nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
